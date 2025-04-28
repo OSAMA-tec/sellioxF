@@ -1,0 +1,92 @@
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-pulse-once {
+  animation: pulse 1s ease-in-out 1;
+}
+
+.referral-popup-overlay {
+  backdrop-filter: blur(3px);
+  transition: all 0.3s ease;
+}
+
+.referral-popup-container {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.referral-popup-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark) 100%);
+}
+
+.referral-popup-benefit-icon {
+  transition: transform 0.2s ease;
+}
+
+.referral-popup-benefit:hover .referral-popup-benefit-icon {
+  transform: scale(1.1);
+}
+
+.referral-popup-button {
+  transition: all 0.2s ease;
+}
+
+.referral-popup-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Mobile Optimizations */
+@media (max-width: 640px) {
+  .referral-popup-container {
+    max-width: 92%;
+    margin: 0 auto;
+  }
+  
+  .referral-popup-header {
+    padding: 1rem !important;
+  }
+  
+  .referral-popup-content {
+    padding: 1.25rem !important;
+  }
+  
+  .referral-popup-benefit {
+    padding: 0.75rem 0;
+  }
+  
+  .referral-popup-benefit-icon {
+    padding: 0.5rem;
+    margin-right: 0.75rem;
+  }
+}
+
+/* Prevent body scrolling when popup is open */
+.popup-open {
+  overflow: hidden;
+}

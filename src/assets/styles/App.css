@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root{
+    --primary-a0: 50, 75, 191;
+    --title-black:13, 13, 13;
+    --gray-accent1: 135, 139, 158;
+    --input-accent1: 248, 249, 254;
+    --input-accent2: 219, 222, 237;
+    --input-active : 141, 147, 173;
+}
+
+.App{
+  /*   overflow-x: hidden; */
+
+  font-family: "Poppins" ,serif;
+  @apply min-h-screen flex flex-col;
+}
+input{
+  @apply rounded-md;
+}
+input::placeholder{
+    @apply font-light text-inputActive;
+    font-size: large;
+}
+input:focus-visible{
+    outline: 2px;
+    outline-style:groove;
+    outline-color: rgba(var(--input-accent2))
+}
+h1,h2,h3,h4,h5,h6{
+    @apply font-bold ;
+}
+.rounded-bullet{
+    @apply rounded-s-full rounded-e-full;
+}
+.btn-primary{
+   @apply block gap-2 bg-primaryA0 text-white py-3 px-10 items-center rounded-md capitalize hover:bg-white hover:text-black
+}
+.btn-secondary{
+    @apply block gap-2 bg-white text-black py-3 px-10 items-center rounded-md capitalize border  hover:text-primaryA0
+}
+.btn-black{
+    @apply border  p-3 rounded-lg capitalize bg-black text-white hover:bg-white hover:text-black;
+}
+
+.filter-row {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center; 
+
+  }
+  
+
+
+@media (max-width: 767px) {
+    
+    .filter-row, .filter-items {
+        flex-direction: column;
+    }
+
+    .filter-row .left {
+        order: 2;
+        margin-top: 30px;
+      }
+      
+      .filter-row .right {
+        order: 1;
+        gap: 0.3rem;
+      }
+      .filter-row .right select {
+        max-width: 300px;
+      }
+
+    .categories-area {
+        display: none;
+    }
+}
