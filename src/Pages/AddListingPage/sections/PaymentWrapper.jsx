@@ -1,11 +1,12 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import PaymentFormSection from "./PaymentForm.section";
-import config from "../../../config";
-// Initialize Stripe outside of component (singleton pattern)
-const stripePromise = loadStripe(config.STRIPE_PUBLIC_KEY);
+import { STRIPE_PUBLIC_KEY } from "../../../config/constants";
+
+// Initialize Stripe with your public key
+const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
 const PaymentWrapper = ({
   onPaymentComplete,
@@ -13,32 +14,33 @@ const PaymentWrapper = ({
   formSubmitButtonClicked,
   setFormSubmitButtonClicked,
   selectedPlan,
+  isCreatingListing,
+  hasExistingSubscription,
 }) => {
-  const stripeOptions = {
-    appearance: {
-      theme: 'stripe',
-      variables: {
-        colorPrimary: '#6663FD',
-        colorBackground: '#ffffff',
-        colorText: '#30313d',
-        colorDanger: '#df1b41',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        spacingUnit: '4px',
-        borderRadius: '8px',
-      },
-    },
-  };
+  const [isLoading, setIsLoading] = useState(false);
+  const [clientSecret, setClientSecret] = useState("");
 
   return (
-    <Elements stripe={stripePromise} options={stripeOptions}>
-      <PaymentFormSection
-        onPaymentComplete={onPaymentComplete}
-        handleBack={handleBack}
-        formSubmitButtonClicked={formSubmitButtonClicked}
-        setFormSubmitButtonClicked={setFormSubmitButtonClicked}
-        selectedPlan={selectedPlan}
-      />
-    </Elements>
+    <div className="max-w-4xl mx-auto">
+      <div className="bg-white rounded-lg">
+        <div className="p-4 sm:p-6 lg:p-8">
+          <h2 className="text-xl font-semibold mb-6">Payment Information</h2>
+
+          {/* Stripe Elements must be wrapped in the Elements provider */}
+          <Elements stripe={stripePromise}>
+            <PaymentFormSection
+              onPaymentComplete={onPaymentComplete}
+              handleBack={handleBack}
+              formSubmitButtonClicked={formSubmitButtonClicked}
+              setFormSubmitButtonClicked={setFormSubmitButtonClicked}
+              selectedPlan={selectedPlan}
+              isCreatingListing={isCreatingListing}
+              hasExistingSubscription={hasExistingSubscription}
+            />
+          </Elements>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -48,6 +50,8 @@ PaymentWrapper.propTypes = {
   formSubmitButtonClicked: PropTypes.bool.isRequired,
   setFormSubmitButtonClicked: PropTypes.func.isRequired,
   selectedPlan: PropTypes.object,
+  isCreatingListing: PropTypes.bool,
+  hasExistingSubscription: PropTypes.bool,
 };
 
-export default PaymentWrapper; 
+export default PaymentWrapper;

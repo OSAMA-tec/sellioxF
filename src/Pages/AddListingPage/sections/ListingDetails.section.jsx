@@ -1,20 +1,40 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useFormContext } from "react-hook-form";
-import { FaArrowLeft, FaArrowRight, FaExclamationCircle, FaTrash } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaExclamationCircle, FaTrash, FaIdCard } from "react-icons/fa";
 
 // Import categories from the data file to ensure consistency
 import { categories, mainCategories } from "../../../data/links";
 
-const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selectedPlan, methods }) => {
-  const { register, formState: { errors }, handleSubmit, watch } = useFormContext();
+const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selectedPlan, methods, hasExistingSubscription = false }) => {
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+    watch,
+  } = useFormContext();
   const [photoCount, setPhotoCount] = useState(0);
   const photos = watch("photos") || [];
-  
+
   // Get max photo count based on selected plan
   const getMaxPhotoCount = () => {
     if (!selectedPlan) return 5; // Default to basic plan
-    
+
+    // If the plan is from an existing subscription (which has a different structure)
+    if (selectedPlan.planType) {
+      const planType = selectedPlan.planType.toLowerCase();
+      switch (planType) {
+        case "basic":
+          return 5;
+        case "premium":
+          return 10;
+        case "featured":
+          return 15;
+        default:
+          return 5;
+      }
+    }
+
     switch (selectedPlan.id) {
       case "basic":
         return 5;
@@ -25,32 +45,32 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
         return 5;
     }
   };
-  
+
   const maxPhotos = getMaxPhotoCount();
-  
+
   useEffect(() => {
     setPhotoCount(photos.length);
   }, [photos]);
-  
+
   // Load saved form data when component mounts
   useEffect(() => {
-    const savedData = localStorage.getItem('listingDetailsData');
+    const savedData = localStorage.getItem("listingDetailsData");
     if (savedData) {
       const parsedData = JSON.parse(savedData);
-      Object.keys(parsedData).forEach(key => {
+      Object.keys(parsedData).forEach((key) => {
         // Don't override the current photos if they exist
-        if (key === 'photos' && photos.length > 0) return;
+        if (key === "photos" && photos.length > 0) return;
         methods.setValue(key, parsedData[key]);
       });
     }
   }, []);
-  
+
   // Check if photo count exceeds the limit for the selected plan
   const isPhotoLimitExceeded = photoCount > maxPhotos;
-  
+
   // Show warning if user has selected more photos than allowed by the plan
   const [showPhotoWarning, setShowPhotoWarning] = useState(false);
-  
+
   useEffect(() => {
     if (isPhotoLimitExceeded) {
       setShowPhotoWarning(true);
@@ -58,26 +78,26 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
       setShowPhotoWarning(false);
     }
   }, [isPhotoLimitExceeded, photoCount, maxPhotos]);
-  
+
   // Handle file size validation
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
   const [fileSizeError, setFileSizeError] = useState(null);
-  
+
   // Handle file input change
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    
+
     // Check file sizes
-    const oversizedFiles = files.filter(file => file.size > MAX_FILE_SIZE);
+    const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
     if (oversizedFiles.length > 0) {
       setFileSizeError(`${oversizedFiles.length} file(s) exceed the 5MB size limit and won't be uploaded.`);
-      
+
       // Filter out oversized files
-      const validFiles = files.filter(file => file.size <= MAX_FILE_SIZE);
+      const validFiles = files.filter((file) => file.size <= MAX_FILE_SIZE);
       if (validFiles.length === 0) {
         return; // Don't proceed if no valid files
       }
-      
+
       // Continue with valid files only
       methods.setValue("photos", [...photos, ...validFiles]);
     } else {
@@ -85,72 +105,85 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
       methods.setValue("photos", [...photos, ...files]);
     }
   };
-  
+
   // Handle individual photo removal
   const handleRemovePhoto = (index) => {
     const updatedPhotos = [...photos];
     updatedPhotos.splice(index, 1);
     methods.setValue("photos", updatedPhotos);
   };
-  
+
   const onSubmit = (data) => {
     // If photo limit is exceeded, trim the photos array to the maximum allowed
     if (isPhotoLimitExceeded) {
       const trimmedPhotos = photos.slice(0, maxPhotos);
       data.photos = trimmedPhotos;
-      
+
       // Save the trimmed photos to the form
       methods.setValue("photos", trimmedPhotos);
     }
-    
+
     // Save form data to localStorage to preserve it
     const formData = methods.getValues();
-    localStorage.setItem('listingDetailsData', JSON.stringify(formData));
-    
+    localStorage.setItem("listingDetailsData", JSON.stringify(formData));
+
     handleNext();
+  };
+
+  // Get the plan type to display to the user
+  const getPlanTypeName = () => {
+    if (!selectedPlan) return "Basic";
+    return selectedPlan.planType || selectedPlan.name || "Standard";
   };
 
   return (
     <div className="w-full">
+      {hasExistingSubscription && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center mb-2">
+            <FaIdCard className="text-blue-600 mr-2" />
+            <h3 className="font-semibold text-blue-800">Using Your Existing Subscription</h3>
+          </div>
+          <p className="text-sm text-blue-700">
+            You're creating a listing with your current {getPlanTypeName()} plan. This listing will be covered by your existing subscription
+            at no additional cost.
+          </p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Listing Details</h2>
-          
+
           {/* Photo limit warning */}
           {showPhotoWarning && (
             <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-start">
               <FaExclamationCircle className="text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
               <div>
                 <p className="text-sm text-amber-700">
-                  Your selected plan ({selectedPlan?.name}) allows a maximum of {maxPhotos} photos.
+                  Your {hasExistingSubscription ? "current" : "selected"} plan ({getPlanTypeName()}) allows a maximum of {maxPhotos} photos.
                   {photoCount - maxPhotos} photo(s) will be removed when you proceed.
                 </p>
-                <button 
-                  onClick={() => setShowPhotoWarning(false)} 
-                  className="text-xs text-amber-700 underline mt-1"
-                >
+                <button onClick={() => setShowPhotoWarning(false)} className="text-xs text-amber-700 underline mt-1">
                   Dismiss
                 </button>
               </div>
             </div>
           )}
-          
+
           {/* File size error */}
           {fileSizeError && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start">
               <FaExclamationCircle className="text-red-500 mt-0.5 mr-2 flex-shrink-0" />
               <div>
                 <p className="text-sm text-red-700">{fileSizeError}</p>
-                <button 
-                  onClick={() => setFileSizeError(null)} 
-                  className="text-xs text-red-700 underline mt-1"
-                >
+                <button onClick={() => setFileSizeError(null)} className="text-xs text-red-700 underline mt-1">
                   Dismiss
                 </button>
               </div>
             </div>
           )}
-          
+
           {/* Photo Upload */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -166,10 +199,7 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
                 onChange={handleFileChange}
                 {...register("photos")}
               />
-              <label
-                htmlFor="photos"
-                className="flex flex-col items-center justify-center cursor-pointer"
-              >
+              <label htmlFor="photos" className="flex flex-col items-center justify-center cursor-pointer">
                 <svg
                   className="w-10 h-10 text-gray-400 mb-2"
                   fill="none"
@@ -188,17 +218,13 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
                 <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
               </label>
             </div>
-            
+
             {/* Photo Preview */}
             {photoCount > 0 && (
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {Array.from(photos).map((photo, index) => (
                   <div key={index} className="relative group">
-                    <img
-                      src={URL.createObjectURL(photo)}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-24 object-cover rounded-md"
-                    />
+                    <img src={URL.createObjectURL(photo)} alt={`Preview ${index + 1}`} className="w-full h-24 object-cover rounded-md" />
                     <button
                       type="button"
                       onClick={() => handleRemovePhoto(index)}
@@ -214,7 +240,7 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
               </div>
             )}
           </div>
-          
+
           {/* Listing Title */}
           <div className="mb-4">
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
@@ -224,14 +250,12 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
               id="title"
               type="text"
               {...register("title", { required: "Title is required" })}
-              className={`w-full px-3 py-2 border ${errors.title ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-primaryA0 focus:border-primaryA0`}
+              className={`w-full px-3 py-2 border ${errors.title ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:ring-primaryA0 focus:border-primaryA0`}
               placeholder="Enter a descriptive title for your listing"
             />
-            {errors.title && (
-              <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>
-            )}
+            {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>}
           </div>
-          
+
           {/* Category Selection */}
           <div className="mb-4">
             <label htmlFor="mainCategory" className="block text-sm font-medium text-gray-700 mb-1">
@@ -240,7 +264,7 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
             <select
               id="mainCategory"
               {...register("mainCategory", { required: "Main category is required" })}
-              className={`w-full px-3 py-2 border ${errors.mainCategory ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-primaryA0 focus:border-primaryA0`}
+              className={`w-full px-3 py-2 border ${errors.mainCategory ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:ring-primaryA0 focus:border-primaryA0`}
             >
               <option value="">Select a main category</option>
               <option value="domestic">Domestic</option>
@@ -248,12 +272,10 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
               <option value="trade">Trade</option>
               <option value="other">Other</option>
             </select>
-            {errors.mainCategory && (
-              <p className="mt-1 text-xs text-red-500">{errors.mainCategory.message}</p>
-            )}
+            {errors.mainCategory && <p className="mt-1 text-xs text-red-500">{errors.mainCategory.message}</p>}
           </div>
-          
-          {/* Sub-Category Selection */}
+
+          {/* Specific Category based on Main Category */}
           <div className="mb-4">
             <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
               Specific Category*
@@ -261,23 +283,21 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
             <select
               id="category"
               {...register("category", { required: "Category is required" })}
-              className={`w-full px-3 py-2 border ${errors.category ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-primaryA0 focus:border-primaryA0`}
+              className={`w-full px-3 py-2 border ${errors.category ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:ring-primaryA0 focus:border-primaryA0`}
               disabled={!methods.watch("mainCategory")}
             >
               <option value="">Select a specific category</option>
-              {methods.watch("mainCategory") && categories[methods.watch("mainCategory")] && 
+              {methods.watch("mainCategory") &&
+                categories[methods.watch("mainCategory")] &&
                 categories[methods.watch("mainCategory")].map((cat, index) => (
                   <option key={index} value={cat.header}>
                     {cat.header}
                   </option>
-                ))
-              }
+                ))}
             </select>
-            {errors.category && (
-              <p className="mt-1 text-xs text-red-500">{errors.category.message}</p>
-            )}
+            {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category.message}</p>}
           </div>
-          
+
           {/* Listing Description */}
           <div className="mb-4">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
@@ -286,19 +306,15 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
             <textarea
               id="description"
               rows="5"
-              {...register("description", { 
+              {...register("description", {
                 required: "Description is required",
-                minLength: { value: 20, message: "Description must be at least 20 characters" }
+                minLength: { value: 20, message: "Description must be at least 20 characters" },
               })}
-              className={`w-full px-3 py-2 border ${errors.description ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-primaryA0 focus:border-primaryA0`}
+              className={`w-full px-3 py-2 border ${errors.description ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:ring-primaryA0 focus:border-primaryA0`}
               placeholder="Provide a detailed description of your listing"
             ></textarea>
-            {errors.description && (
-              <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>
-            )}
-            <p className="mt-1 text-xs text-gray-500">
-              Minimum 20 characters. Be detailed and highlight what makes your listing special.
-            </p>
+            {errors.description && <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>}
+            <p className="mt-1 text-xs text-gray-500">Minimum 20 characters. Be detailed and highlight what makes your listing special.</p>
           </div>
         </div>
 
@@ -312,13 +328,15 @@ const ListingDetailsSection = ({ handleBack, handleNext, handleChangePlan, selec
               <FaArrowLeft className="w-3 h-3" />
               Previous
             </button>
-            <button
-              type="button"
-              onClick={handleChangePlan}
-              className="flex items-center gap-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md shadow transition duration-300"
-            >
-              Change Plan
-            </button>
+            {!hasExistingSubscription && (
+              <button
+                type="button"
+                onClick={handleChangePlan}
+                className="flex items-center gap-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md shadow transition duration-300"
+              >
+                Change Plan
+              </button>
+            )}
           </div>
           <button
             type="submit"
@@ -339,6 +357,7 @@ ListingDetailsSection.propTypes = {
   handleChangePlan: PropTypes.func.isRequired,
   selectedPlan: PropTypes.object,
   methods: PropTypes.object.isRequired,
+  hasExistingSubscription: PropTypes.bool,
 };
 
 export default ListingDetailsSection;
