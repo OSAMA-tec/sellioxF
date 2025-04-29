@@ -31,12 +31,12 @@ export default function Homepage() {
         setShowLocationDropdown(false);
       }
     }
-    
+
     // Add event listener only when dropdown is open
     if (showLocationDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -53,13 +53,13 @@ export default function Homepage() {
     region: selectedRegion,
     district: selectedDistrict,
   });
-  
+
   const handleCountryChange = (e) => {
     const country = e.target.value;
     setSelectedCountry(country);
     setSelectedRegion("");
     setSelectedDistrict("");
-    
+
     if (country === "New Zealand") {
       setRegions(Object.keys(nzRegions));
       setDistricts([]);
@@ -76,7 +76,7 @@ export default function Homepage() {
     const region = e.target.value;
     setSelectedRegion(region);
     setSelectedDistrict("");
-    
+
     if (selectedCountry === "New Zealand") {
       setDistricts(nzRegions[region] || []);
     } else if (selectedCountry === "Australia") {
@@ -97,13 +97,13 @@ export default function Homepage() {
     setDistricts([]);
     setRegions([]);
     if (searchTitle) {
-      dispatch(setSearchTitle({ title: '' }));
+      dispatch(setSearchTitle({ title: "" }));
     }
     if (searchListingNumber) {
-      dispatch(setSearchListingNumber({ listingNumber: '' }));
+      dispatch(setSearchListingNumber({ listingNumber: "" }));
     }
     if (searchCategory) {
-      dispatch(setSearchSubCategory({category:'', subCategory:''}));
+      dispatch(setSearchSubCategory({ category: "", subCategory: "" }));
     }
     setShowFilters(false);
     setShowLocationDropdown(false);
@@ -112,7 +112,7 @@ export default function Homepage() {
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
-  
+
   const toggleLocationDropdown = () => {
     setShowLocationDropdown(!showLocationDropdown);
   };
@@ -124,23 +124,23 @@ export default function Homepage() {
   // Format location for display in the filter button
   const getLocationDisplay = () => {
     if (!selectedCountry) return "Location: Any";
-    
+
     let display = selectedCountry;
     if (selectedRegion) display += ` › ${selectedRegion}`;
     if (selectedDistrict) display += ` › ${selectedDistrict}`;
-    
+
     return display;
   };
 
   // Handle keyboard events for accessibility
   const handleLocationKeyDown = (e) => {
     // Toggle dropdown on Enter or Space
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       toggleLocationDropdown();
     }
     // Close dropdown on Escape
-    else if (e.key === 'Escape' && showLocationDropdown) {
+    else if (e.key === "Escape" && showLocationDropdown) {
       setShowLocationDropdown(false);
     }
   };
@@ -156,33 +156,20 @@ export default function Homepage() {
           <SwiperComponent slides={allCategories} />
         </div>
       </section>
-      
+
       {/* Listings Section */}
-      <section className="w-full px-6 md:px-10 flex flex-col capitalize gap-3 my-3 max-w-7xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+      <section className="w-full px-4 sm:px-6 md:px-10 flex flex-col capitalize gap-3 my-3 max-w-7xl mx-auto">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-4">
           {/* Search and filter tools */}
-          <div className="flex flex-row items-center justify-between mb-4 w-full gap-3">
-            {/* Left side: Results Count */}
-            <div className="flex items-center text-sm md:text-base text-gray-700">
-              <span className="font-medium">
-                {data?.data?.listings?.length || 0}
-              </span> 
-              <span className="mx-1">of</span>
-              <span className="font-medium">
-                {data?.data?.totalListings || 0}
-              </span>
-              <span className="ml-1">active listings</span>
-              {hasActiveFilters && (
-                <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded-full">Filtered</span>
-              )}
-            </div>
-            
-            {/* Right side: Location filter dropdown */}
-            <div className="relative ml-auto" ref={locationDropdownRef}>
-              <button 
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-4 w-full gap-3">
+            {/* Location filter dropdown - Mobile friendly */}
+            <div className="relative w-full sm:w-auto sm:ml-auto" ref={locationDropdownRef}>
+              <button
                 onClick={toggleLocationDropdown}
                 onKeyDown={handleLocationKeyDown}
-                className={`flex items-center justify-between gap-2 px-4 py-2 rounded-lg border ${hasLocationFilters ? 'border-primaryA0 text-primaryA0 bg-primaryA0/5' : 'border-gray-300 text-gray-700'} hover:border-primaryA0 transition-colors min-w-[200px] md:min-w-[250px]`}
+                className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border w-full sm:w-auto ${
+                  hasLocationFilters ? "border-primaryA0 text-primaryA0 bg-primaryA0/5" : "border-gray-300 text-gray-700"
+                } hover:border-primaryA0 transition-colors min-w-[180px] sm:min-w-[250px]`}
                 aria-expanded={showLocationDropdown}
                 aria-haspopup="true"
                 tabIndex="0"
@@ -192,26 +179,30 @@ export default function Homepage() {
                   <FaMapMarkerAlt size={14} />
                   <span className="truncate text-sm font-medium">{getLocationDisplay()}</span>
                 </div>
-                <FaChevronDown size={12} className={`transition-transform ${showLocationDropdown ? 'rotate-180' : ''}`} />
+                <FaChevronDown size={12} className={`transition-transform ${showLocationDropdown ? "rotate-180" : ""}`} />
               </button>
-              
-              {/* Location dropdown */}
+
+              {/* Location dropdown - Improved for mobile */}
               {showLocationDropdown && (
-                <div 
-                  className="absolute z-20 mt-2 p-4 bg-white rounded-lg shadow-lg border border-gray-200 right-0 min-w-[280px] md:min-w-[350px] animate-fadeIn transition-all transform-gpu origin-top"
+                <div
+                  className="absolute z-20 mt-2 p-4 bg-white rounded-lg shadow-lg border border-gray-200 left-0 sm:right-0 sm:left-auto w-full sm:min-w-[320px] md:min-w-[350px] animate-fadeIn transition-all transform-gpu origin-top"
                   role="dialog"
                   aria-label="Location filters"
                 >
                   <div className="flex flex-col gap-4">
                     <div>
-                      <h3 className="font-medium text-gray-800 mb-2" id="location-filter-title">Location</h3>
+                      <h3 className="font-medium text-gray-800 mb-2" id="location-filter-title">
+                        Location
+                      </h3>
                       <div className="space-y-3">
                         <div>
-                          <label htmlFor="country-select" className="block text-xs text-gray-600 mb-1">Country</label>
-                          <select 
+                          <label htmlFor="country-select" className="block text-xs text-gray-600 mb-1">
+                            Country
+                          </label>
+                          <select
                             id="country-select"
-                            className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primaryA0 focus:border-primaryA0" 
-                            onChange={handleCountryChange} 
+                            className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primaryA0 focus:border-primaryA0"
+                            onChange={handleCountryChange}
                             value={selectedCountry}
                             autoFocus
                           >
@@ -220,17 +211,19 @@ export default function Homepage() {
                             <option value="Australia">Australia</option>
                           </select>
                         </div>
-                        
+
                         <div>
-                          <label htmlFor="region-select" className="block text-xs text-gray-600 mb-1">Region</label>
-                          <select 
+                          <label htmlFor="region-select" className="block text-xs text-gray-600 mb-1">
+                            Region
+                          </label>
+                          <select
                             id="region-select"
-                            className={`w-full border rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primaryA0 focus:border-primaryA0 ${!regions.length ? 'bg-gray-50 text-gray-500' : 'border-gray-300'}`}
-                            onChange={handleRegionChange} 
-                            value={selectedRegion} 
+                            className={`w-full border rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primaryA0 focus:border-primaryA0 ${!regions.length ? "bg-gray-50 text-gray-500" : "border-gray-300"}`}
+                            onChange={handleRegionChange}
+                            value={selectedRegion}
                             disabled={!regions.length}
                           >
-                            <option value="">{regions.length ? 'Any region' : 'Select a country first'}</option>
+                            <option value="">{regions.length ? "Any region" : "Select a country first"}</option>
                             {regions?.map((region) => (
                               <option key={region} value={region}>
                                 {region}
@@ -238,17 +231,19 @@ export default function Homepage() {
                             ))}
                           </select>
                         </div>
-                        
+
                         <div>
-                          <label htmlFor="district-select" className="block text-xs text-gray-600 mb-1">District/City</label>
+                          <label htmlFor="district-select" className="block text-xs text-gray-600 mb-1">
+                            District/City
+                          </label>
                           <select
                             id="district-select"
-                            className={`w-full border rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primaryA0 focus:border-primaryA0 ${!districts.length ? 'bg-gray-50 text-gray-500' : 'border-gray-300'}`}
+                            className={`w-full border rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primaryA0 focus:border-primaryA0 ${!districts.length ? "bg-gray-50 text-gray-500" : "border-gray-300"}`}
                             onChange={handleDistrictChange}
                             value={selectedDistrict}
                             disabled={!districts.length}
                           >
-                            <option value="">{districts.length ? 'Any district/city' : 'Select a region first'}</option>
+                            <option value="">{districts.length ? "Any district/city" : "Select a region first"}</option>
                             {districts?.map((district) => (
                               <option key={district} value={district}>
                                 {district}
@@ -258,9 +253,9 @@ export default function Homepage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-between pt-2 border-t">
-                      <button 
+                      <button
                         onClick={() => {
                           setSelectedCountry("");
                           setSelectedRegion("");
@@ -274,10 +269,10 @@ export default function Homepage() {
                       >
                         Reset location
                       </button>
-                      
-                      <button 
+
+                      <button
                         onClick={toggleLocationDropdown}
-                        className="px-4 py-1 text-sm bg-primaryA0 text-white rounded hover:bg-primaryA0/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primaryA0 focus:ring-offset-2"
+                        className="px-4 py-1.5 text-sm bg-primaryA0 text-white rounded hover:bg-primaryA0/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primaryA0 focus:ring-offset-2"
                         aria-label="Apply location filters"
                       >
                         Apply
@@ -287,56 +282,56 @@ export default function Homepage() {
                 </div>
               )}
             </div>
-            
 
-
-            {/* Clear all filters button */}
+            {/* Clear all filters button - Mobile friendly */}
             {hasActiveFilters && (
-              <button 
+              <button
                 onClick={handleClear}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-center gap-1 px-3 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors w-full sm:w-auto"
                 aria-label="Clear all filters"
               >
                 <FaTimes size={12} />
-                <span className="text-sm">Clear all</span>
+                <span className="text-sm">Clear all filters</span>
               </button>
             )}
           </div>
-          
-          <div className="flex flex-wrap items-center justify-start gap-2 mb-4">
 
-            
-            {/* Active filters display */}
-            {hasActiveFilters && (
-              <div className="flex flex-wrap items-center gap-2 text-sm">
+          {/* Active filters display - Improved for mobile */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center justify-start gap-2 mb-2">
+              <div className="flex flex-wrap items-center gap-2 text-sm w-full">
                 {searchCategory && (
-                  <span className="bg-primaryA0/10 text-primaryA0 px-3 py-1 rounded-full flex items-center">
+                  <span className="bg-primaryA0/10 text-primaryA0 px-3 py-1.5 rounded-full flex items-center text-xs sm:text-sm mb-1">
                     {searchCategory}
                   </span>
                 )}
                 {searchTitle && (
-                  <span className="bg-primaryA0/10 text-primaryA0 px-3 py-1 rounded-full flex items-center">
-                    "{searchTitle}"
+                  <span className="bg-primaryA0/10 text-primaryA0 px-3 py-1.5 rounded-full flex items-center text-xs sm:text-sm mb-1">
+                    &ldquo;{searchTitle}&rdquo;
                   </span>
                 )}
                 {searchListingNumber && (
-                  <span className="bg-primaryA0/10 text-primaryA0 px-3 py-1 rounded-full flex items-center">
+                  <span className="bg-primaryA0/10 text-primaryA0 px-3 py-1.5 rounded-full flex items-center text-xs sm:text-sm mb-1">
                     #ID: {searchListingNumber}
                   </span>
                 )}
                 {selectedCountry && (
-                  <span className="bg-primaryA0/10 text-primaryA0 px-3 py-1 rounded-full flex items-center">
-                    <FaMapMarkerAlt className="mr-1" size={12} />
-                    {selectedCountry}
-                    {selectedRegion && ` › ${selectedRegion}`}
-                    {selectedDistrict && ` › ${selectedDistrict}`}
+                  <span className="bg-primaryA0/10 text-primaryA0 px-3 py-1.5 rounded-full flex items-center flex-wrap text-xs sm:text-sm mb-1">
+                    <FaMapMarkerAlt className="mr-1 flex-shrink-0" size={12} />
+                    <span className="inline-flex items-center flex-wrap">
+                      {selectedCountry}
+                      {selectedRegion && <span className="mx-1">›</span>}
+                      {selectedRegion}
+                      {selectedDistrict && <span className="mx-1">›</span>}
+                      {selectedDistrict}
+                    </span>
                   </span>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-        
+
         {/* Listings grid */}
         <ErrorBoundary isLoading={isLoading} isError={isError} error={error}>
           <CardsContainer cards={data?.data} setPage={setPage} />

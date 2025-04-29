@@ -17,7 +17,7 @@ export default function Card({ card }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
-  const user = useSelector(state => state.user.user);
+  const user = useSelector((state) => state.user.user);
 
   useEffect(() => {
     // Check if the listing is saved for this user when the component mounts
@@ -42,13 +42,8 @@ export default function Card({ card }) {
   };
 
   const getRoundRating = (reviews) => {
-    const totalRatings = card?.reviews?.reduce(
-      (sum, review) => sum + (review.rating || 0),
-      0
-    );
-    const calculatedMean = card?.reviews?.length
-      ? totalRatings / card?.reviews.length
-      : null;
+    const totalRatings = card?.reviews?.reduce((sum, review) => sum + (review.rating || 0), 0);
+    const calculatedMean = card?.reviews?.length ? totalRatings / card?.reviews.length : null;
     return calculatedMean ? Number(calculatedMean).toFixed(1) : "0.0";
   };
 
@@ -76,7 +71,7 @@ export default function Card({ card }) {
 
     if (!user) {
       // Redirect to login page if user is not logged in
-      navigate('/auth/login');
+      navigate("/auth/login");
       return;
     }
 
@@ -97,15 +92,28 @@ export default function Card({ card }) {
     setImageLoaded(true);
   };
 
-  // Get location parts for responsive display
-  const locationParts = card.location ? card.location.split(",") : [];
-  const shortLocation = locationParts.length >= 2
-    ? `${locationParts[0].trim()}, ${locationParts[1].trim()}`
-    : card.location || 'Location not specified';
+  // Format location for better display
+  // ============ Improved location formatting ============
+  const formatLocation = () => {
+    if (!card.location) return "Location not specified";
 
-  const imageSrc = card.serviceImages && card.serviceImages.length > 0
-    ? `${config.BACKEND_URL}/${card.serviceImages[0]}`
-    : `${config.BACKEND_URL}/no-image.png`;
+    // Split location by commas and trim each part
+    const parts = card.location
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (parts.length === 0) return "Location not specified";
+    if (parts.length === 1) return parts[0];
+
+    // Format location as "Country › Region › District" if all parts available
+    return parts.join(" › ");
+  };
+
+  const imageSrc =
+    card.serviceImages && card.serviceImages.length > 0
+      ? `${config.BACKEND_URL}/${card.serviceImages[0]}`
+      : `${config.BACKEND_URL}/no-image.png`;
 
   return (
     <div
@@ -115,9 +123,7 @@ export default function Card({ card }) {
       {/* Card Image Section */}
       <div className="relative w-full overflow-hidden bg-gray-200">
         {/* Loading state */}
-        {!imageLoaded && (
-          <div className="absolute inset-0 bg-gray-200 animate-pulse" aria-hidden="true"></div>
-        )}
+        {!imageLoaded && <div className="absolute inset-0 bg-gray-200 animate-pulse" aria-hidden="true"></div>}
 
         {/* Card Image */}
         <img
@@ -125,48 +131,41 @@ export default function Card({ card }) {
           onLoad={handleImageLoad}
           onError={handleImageError}
           alt={card.serviceTitle || "Listing image"}
-          className={`w-full h-52 sm:h-48 md:h-56 lg:h-60 object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`w-full h-52 sm:h-48 md:h-56 lg:h-60 object-cover transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
           loading="lazy"
         />
-
-        {/* Removed listing number badge as requested */}
 
         {/* Save Button */}
         {user && (
           <button
-            className={`absolute right-2 top-2 transition-all duration-200 rounded-full p-2 z-10 ${saved
-                ? 'bg-primaryA0/10 hover:bg-primaryA0/20'
-                : 'bg-white/90 hover:bg-gray-50 shadow-md'
-              }`}
+            className={`absolute right-2 top-2 transition-all duration-200 rounded-full p-2 z-10 ${
+              saved ? "bg-primaryA0/10 hover:bg-primaryA0/20" : "bg-white/90 hover:bg-gray-50 shadow-md"
+            }`}
             onClick={saved ? handleRemoveSavedListing : handleSaveListing}
             aria-label={saved ? "Remove from saved" : "Save listing"}
           >
-            {saved ? (
-              <FaBookmark size={16} className="text-primaryA0" />
-            ) : (
-              <CiBookmark size={18} className="text-primaryA0" />
-            )}
+            {saved ? <FaBookmark size={16} className="text-primaryA0" /> : <CiBookmark size={18} className="text-primaryA0" />}
           </button>
         )}
-
-        {/* Removed bottom info overlay as it will be moved below the image */}
       </div>
 
       {/* Card Content */}
       <div className="flex flex-col flex-grow p-4">
-        {/* Location and rating info - moved from image overlay to here */}
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-1 text-gray-600">
-            <CiLocationOn size={16} className="flex-shrink-0" />
-            <span className="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-[150px]">{shortLocation}</span>
+        {/* Improved location display and rating info */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0 mb-2">
+          {/* Location with better formatting and wrapping */}
+          <div className="flex items-center gap-1 text-gray-600 mb-1 sm:mb-0">
+            <CiLocationOn size={16} className="flex-shrink-0 text-primaryA0" />
+            <span className="text-xs sm:text-sm break-words w-full sm:w-auto">{formatLocation()}</span>
           </div>
+          {/* Rating info */}
           <div className="flex items-center gap-1 text-gray-700">
             <FaStar className="text-yellow-400 flex-shrink-0" size={14} />
             <span className="text-xs sm:text-sm">{getRoundRating(card?.reviews?.length)}</span>
             <span className="text-xs sm:text-sm">({card?.reviews?.length || 0})</span>
           </div>
         </div>
-        
+
         <h3 className="font-medium text-base md:text-lg truncate">{card.serviceTitle || "Untitled Listing"}</h3>
         <div className="mt-2 flex-grow">
           <p className="text-gray-600 text-sm sm:text-base line-clamp-2">
