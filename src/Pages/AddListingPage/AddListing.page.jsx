@@ -99,12 +99,34 @@ const AddListingPage = () => {
   const { mutate: createListing, isLoading: isCreatingListing } = useAddListing(
     (data) => {
       // On success
-      setListingId(data.listing._id);
+      console.log("API Response:", data);
+
+      // Handle different response formats
+      if (data && data.listing && data.listing._id) {
+        // Standard response format
+        setListingId(data.listing._id);
+      } else if (data && data._id) {
+        // Alternative response format (direct listing object)
+        setListingId(data._id);
+      } else if (data && data.data && data.data._id) {
+        // Nested data format
+        setListingId(data.data._id);
+      } else if (data && data.data && data.data.listing && data.data.listing._id) {
+        // Deeply nested format
+        setListingId(data.data.listing._id);
+      } else {
+        // If we can't find a listing ID, generate a temporary one
+        console.warn("Could not find listing ID in response, using fallback");
+        setListingId(`temp-${Date.now()}`);
+      }
+
       notifySuccess("Listing created successfully!");
+
       // If we're at the photos step, move to payment
       if (currentStep === 3) {
         setCurrentStep(4);
       }
+
       // Invalidate listings cache to refresh data
       queryClient.invalidateQueries("userListings");
     },
@@ -237,6 +259,7 @@ const AddListingPage = () => {
 
     // Get all form data
     const formValues = methods.getValues();
+    console.log("Form values:", formValues);
 
     // Ensure required fields are present
     if (!formValues.title) {
@@ -244,8 +267,27 @@ const AddListingPage = () => {
       return;
     }
 
+    // Extract logo from form data or use default settings
+    let logo = null;
+    let usingDefaultLogo = false;
+
+    if (formValues.logo && formValues.logo.length > 0) {
+      // User uploaded a logo file
+      logo = formValues.logo[0];
+      console.log("User-uploaded logo file found:", logo.name);
+    } else if (formValues.defaultLogoColor) {
+      // No logo file, but we have a default logo color set
+      usingDefaultLogo = true;
+      console.log("Using default generated logo with color:", formValues.defaultLogoColor);
+    }
+
     // Extract photos from form data
-    const photos = formValues.photos || [];
+    let serviceImages = [];
+    if (formValues.photos && formValues.photos.length > 0) {
+      // Convert photos to proper format for serviceImages
+      serviceImages = Array.from(formValues.photos).map((photo) => photo);
+      console.log(`Found ${serviceImages.length} service images`);
+    }
 
     // Prepare services array (if it exists)
     const services = formValues.services ? (Array.isArray(formValues.services) ? formValues.services : [formValues.services]) : [];
@@ -270,10 +312,22 @@ const AddListingPage = () => {
       location: formValues.location || "",
       paymentId,
       isUsingExistingSubscription: !paymentSuccess || paymentId === "using_existing_subscription",
-      // Pass the photos array (the useAddListing hook will process this into serviceImages)
-      photos: photos,
+
+      // Include logo and serviceImages explicitly
+      logo: logo,
+      serviceImages: serviceImages,
+
+      // Add flag and color for default logo generation
+      usingDefaultLogo: usingDefaultLogo,
+      defaultLogoColor: formValues.defaultLogoColor || "#10B981",
+      defaultLogoText: formValues.businessName ? formValues.businessName.charAt(0).toUpperCase() : "B",
+
+      // Pass the photos array as backup (the useAddListing hook will process this into serviceImages)
+      photos: formValues.photos || [],
+
       // Add services array if it exists
       services: services,
+
       // Include other form data
       ...formValues,
     };

@@ -412,9 +412,7 @@ const PaymentFormSection = ({
             <FaIdCard className="text-blue-600 text-2xl" />
           </div>
           <h3 className="text-lg font-semibold text-blue-800 mb-2">Using Your Existing Subscription</h3>
-          <p className="text-blue-700 mb-4">
-            You already have an active subscription. Your new listing will be created using your current plan without additional charge.
-          </p>
+          <p className="text-blue-700 mb-4">You already have an active subscription.</p>
           <div className="text-sm text-blue-600">Click the &quot;Create Listing&quot; button below to continue.</div>
         </div>
       )}

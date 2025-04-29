@@ -1,11 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FaCopy, FaTicketAlt, FaCalendarAlt, FaClock, FaEnvelope, FaWhatsapp, FaSms, FaUserPlus, FaUserCheck, FaCoins, FaTrophy } from 'react-icons/fa';
-import { IoMdTime } from 'react-icons/io';
-import axiosInstance from '../../utils/axiosInstance/axiosInstance';
-import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import { handleError } from '../../utils/errorHandler';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  FaCopy,
+  FaTicketAlt,
+  FaCalendarAlt,
+  FaClock,
+  FaEnvelope,
+  FaWhatsapp,
+  FaSms,
+  FaUserPlus,
+  FaUserCheck,
+  FaCoins,
+  FaTrophy,
+} from "react-icons/fa";
+import { IoMdTime } from "react-icons/io";
+import axiosInstance from "../../utils/axiosInstance/axiosInstance";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import { handleError } from "../../utils/errorHandler";
 
 export default function ReferralPage() {
   const [loading, setLoading] = useState(true);
@@ -17,74 +29,77 @@ export default function ReferralPage() {
       month: new Date().getMonth(),
       year: new Date().getFullYear(),
       daysUntilDraw: 0,
-      hoursUntilDraw: 0
+      hoursUntilDraw: 0,
     },
-    isWinner: false
+    isWinner: false,
   });
-  
-  const user = useSelector(state => state.user.user);
-  
+
+  const user = useSelector((state) => state.user.user);
+
   useEffect(() => {
     if (user) {
       fetchReferralData();
     }
   }, [user]);
-  
+
   const fetchReferralData = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get('/referral/user-data');
+      const response = await axiosInstance.get("/referral/user-data");
       setReferralData(response.data);
     } catch (error) {
-      handleError(error, 'fetchReferralData', {
-        fallbackMessage: 'Failed to load referral data'
+      handleError(error, "fetchReferralData", {
+        fallbackMessage: "Failed to load referral data",
       });
     } finally {
       setLoading(false);
     }
   };
-  
+
   // We're not generating a new code every time, just fetching the existing one
   // This function is kept for backward compatibility but will be removed in future
   const generateReferralCode = async () => {
     try {
       // Instead of generating a new code, we'll just fetch the existing one
-      const response = await axiosInstance.get('/referral/user-data');
+      const response = await axiosInstance.get("/referral/user-data");
       if (response.data.referralCode) {
-        setReferralData(prevData => ({
+        setReferralData((prevData) => ({
           ...prevData,
-          referralCode: response.data.referralCode
+          referralCode: response.data.referralCode,
         }));
-        toast.success('Referral code retrieved!');
+        toast.success("Referral code retrieved!");
       } else {
         // If no code exists yet, create one
-        const newCodeResponse = await axiosInstance.post('/referral/generate-code');
-        setReferralData(prevData => ({
+        const newCodeResponse = await axiosInstance.post("/referral/generate-code");
+        setReferralData((prevData) => ({
           ...prevData,
-          referralCode: newCodeResponse.data.code
+          referralCode: newCodeResponse.data.code,
         }));
-        toast.success('Referral code generated!');
+        toast.success("Referral code generated!");
       }
     } catch (error) {
-      handleError(error, 'generateReferralCode', {
-        fallbackMessage: 'Failed to retrieve referral code'
+      handleError(error, "generateReferralCode", {
+        fallbackMessage: "Failed to retrieve referral code",
       });
     }
   };
-  
+
   const copyReferralCode = () => {
     if (referralData.referralCode) {
-      navigator.clipboard.writeText(referralData.referralCode)
-        .then(() => toast.success('Referral code copied to clipboard!'))
-        .catch((error) => handleError(error, 'copyReferralCode', {
-          fallbackMessage: 'Failed to copy code',
-          showToast: true
-        }));
+      navigator.clipboard
+        .writeText(referralData.referralCode)
+        .then(() => toast.success("Referral code copied to clipboard!"))
+        .catch((error) =>
+          handleError(error, "copyReferralCode", {
+            fallbackMessage: "Failed to copy code",
+            showToast: true,
+          }),
+        );
     }
   };
-  
+
   const shareByEmail = () => {
-    const subject = 'Join Selliox and get rewards!';
+    const subject = "Join Selliox and get rewards!";
     const body = `Hi there,
 
 I'm using Selliox for my listings and thought you might be interested. If you sign up using my referral code (${referralData.referralCode}), you'll get special benefits!
@@ -92,32 +107,42 @@ I'm using Selliox for my listings and thought you might be interested. If you si
 Just enter this code when creating your listing: ${referralData.referralCode}
 
 Thanks!`;
-    
+
     try {
       window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     } catch (error) {
-      handleError(error, 'shareByEmail', {
-        fallbackMessage: 'Failed to open email client',
-        showToast: true
+      handleError(error, "shareByEmail", {
+        fallbackMessage: "Failed to open email client",
+        showToast: true,
       });
     }
   };
-  
+
   const getMonthName = (monthIndex) => {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June', 
-      'July', 'August', 'September', 'October', 'November', 'December'
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
     return months[monthIndex];
   };
-  
+
   const formatDrawDate = (month, year) => {
     return `${getMonthName(month)} ${year}`;
   };
-  
+
   const renderCountdown = () => {
     const { daysUntilDraw, hoursUntilDraw } = referralData.currentDraw;
-    
+
     return (
       <div className="mt-4">
         <div className="flex justify-center gap-4">
@@ -136,7 +161,7 @@ Thanks!`;
       </div>
     );
   };
-  
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -144,7 +169,7 @@ Thanks!`;
       </div>
     );
   }
-  
+
   // Redirect to claim prize if user is a winner
   if (referralData.isWinner) {
     return (
@@ -153,40 +178,49 @@ Thanks!`;
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
             <div className="ml-3">
               <p className="text-sm text-yellow-700">
-                Congratulations! You've won the monthly draw! <Link to="/referral/claim-prize" className="font-medium underline">Claim your prize now</Link>.
+                Congratulations! You've won the monthly draw!{" "}
+                <Link to="/referral/claim-prize" className="font-medium underline">
+                  Claim your prize now
+                </Link>
+                .
               </p>
             </div>
           </div>
         </div>
-        
+
         {/* Rest of the dashboard content */}
         {renderDashboardContent()}
       </div>
     );
   }
-  
+
   return renderDashboardContent();
-  
+
   function renderDashboardContent() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Referral Dashboard</h1>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Referral Code */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <h2 className="text-xl font-semibold mb-4">Your Referral Code</h2>
-              
+
               {!referralData.referralCode ? (
                 <div>
                   <p className="text-gray-600 mb-4">
-                    Generate your unique referral code to share with friends. When they use your code while creating a listing, you'll earn rewards!
+                    Generate your unique referral code to share with friends. When they use your code while creating a listing, you'll earn
+                    rewards!
                   </p>
                   <button
                     onClick={generateReferralCode}
@@ -200,12 +234,12 @@ Thanks!`;
                   <p className="text-gray-600 mb-4">
                     Share this code with friends. When they use it while creating a listing, you'll earn rewards!
                   </p>
-                  
+
                   <div className="flex mb-6">
                     <div className="bg-gray-100 border rounded-l-lg px-4 py-3 font-mono text-lg font-medium flex-grow">
                       {referralData.referralCode}
                     </div>
-                    <button 
+                    <button
                       onClick={copyReferralCode}
                       className="bg-primaryA0 text-white rounded-r-lg px-4 py-3 hover:bg-primaryA0/90 transition-colors"
                       aria-label="Copy referral code"
@@ -213,7 +247,7 @@ Thanks!`;
                       <FaCopy />
                     </button>
                   </div>
-                  
+
                   <h3 className="text-lg font-medium mb-3">Share your code</h3>
                   <div className="flex space-x-4 mt-4">
                     <button
@@ -250,7 +284,7 @@ Thanks!`;
                 </div>
               )}
             </div>
-            
+
             {/* Draw Entries Section */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex justify-between items-center mb-6">
@@ -260,7 +294,7 @@ Thanks!`;
                   <span>{referralData.totalTickets}</span>
                 </div>
               </div>
-              
+
               {referralData.drawEntries.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
                   <FaTicketAlt className="mx-auto text-4xl mb-2 text-gray-300" />
@@ -270,9 +304,12 @@ Thanks!`;
               ) : (
                 <div className="space-y-4">
                   {referralData.drawEntries.slice(0, 5).map((entry, index) => (
-                    <div key={entry._id || index} className="flex justify-between items-center bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div
+                      key={entry._id || index}
+                      className="flex justify-between items-center bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
                       <div className="flex items-center gap-3">
-                        {entry.type === 'signup' ? (
+                        {entry.type === "signup" ? (
                           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                             <FaUserPlus />
                           </div>
@@ -282,12 +319,8 @@ Thanks!`;
                           </div>
                         )}
                         <div>
-                          <div className="font-medium">
-                            {entry.type === 'signup' ? 'User Signup' : 'Listing Created'}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {new Date(entry.createdAt).toLocaleDateString()}
-                          </div>
+                          <div className="font-medium">{entry.type === "signup" ? "User Signup" : "Listing Created"}</div>
+                          <div className="text-sm text-gray-500">{new Date(entry.createdAt).toLocaleDateString()}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 bg-primaryA0/10 text-primaryA0 py-1 px-3 rounded-lg font-medium">
@@ -300,15 +333,15 @@ Thanks!`;
               )}
             </div>
           </div>
-          
+
           {/* Right Column - Draw Info */}
           <div>
             <div className="bg-white rounded-lg shadow-md p-6 mb-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-primaryA0/10 rounded-bl-full z-0"></div>
-              
+
               <div className="relative z-10">
                 <h2 className="text-xl font-semibold mb-4">Monthly Draw</h2>
-                
+
                 <div className="text-center py-4">
                   <div className="flex justify-center items-center mb-4">
                     <div className="relative">
@@ -320,10 +353,10 @@ Thanks!`;
                       </div>
                     </div>
                   </div>
-                  
+
                   <h3 className="text-3xl font-bold bg-gradient-to-r from-amber-500 to-amber-400 text-transparent bg-clip-text">$1,000</h3>
                   <p className="text-gray-500 mb-2">Prize Pool</p>
-                  
+
                   <div className="mt-4 bg-gray-50 rounded-lg p-4 border border-gray-100">
                     <h4 className="font-medium text-gray-700">Draw Date</h4>
                     <p className="text-gray-700 font-semibold">
@@ -334,7 +367,7 @@ Thanks!`;
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-gradient-to-br from-white to-gray-50 border rounded-lg p-6 shadow-sm">
               <h2 className="text-lg font-semibold mb-4 text-gray-800">How It Works</h2>
               <ul className="space-y-4">
@@ -372,4 +405,4 @@ Thanks!`;
       </div>
     );
   }
-} 
+}

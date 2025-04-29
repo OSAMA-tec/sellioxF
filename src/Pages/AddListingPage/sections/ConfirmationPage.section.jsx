@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getUserReferralCode, createReferralUrl } from "../../../utils/referralCode";
 import {
-  FaCheck,
+  FaCheckCircle,
   FaShare,
-  FaCopy,
+  FaClipboard,
+  FaClipboardCheck,
   FaFacebook,
-  FaTwitter,
-  FaLinkedin,
-  FaGift,
   FaWhatsapp,
   FaEnvelope,
+  FaSms,
   FaTicketAlt,
+  FaHome,
   FaListUl,
-  FaUser,
-  FaClipboardCheck,
-  FaIdCard,
+  FaTrophy,
 } from "react-icons/fa";
 
 const ConfirmationPageSection = ({ referralUsed, listingId, usingExistingSubscription = false }) => {
@@ -27,7 +25,6 @@ const ConfirmationPageSection = ({ referralUsed, listingId, usingExistingSubscri
   const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [listingData, setListingData] = useState(null);
-  const [ticketsEarned, setTicketsEarned] = useState(0);
 
   // Get the user's referral code and set up listing data
   useEffect(() => {
@@ -43,18 +40,12 @@ const ConfirmationPageSection = ({ referralUsed, listingId, usingExistingSubscri
         category: "Professional Services",
         location: "Auckland, New Zealand",
       });
-
-      // Calculate tickets earned
-      // Base tickets for creating a listing
-      const baseTickets = 5;
-      setTicketsEarned(baseTickets);
     }
   }, [user, listingId]);
 
   // Set up share URL
   useEffect(() => {
     if (!userReferralCode) return;
-
     setShareUrl(createReferralUrl(userReferralCode));
   }, [userReferralCode]);
 
@@ -71,214 +62,182 @@ const ConfirmationPageSection = ({ referralUsed, listingId, usingExistingSubscri
 
   // Handle social sharing
   const handleShare = (platform) => {
+    const shareText =
+      "Hey! Use my referral code to join Selliox and get your first month FREE! OR, you'll be entered into our $1,000 monthly prize draw.";
     let shareLink = "";
-    const shareText = `Check out my new listing on Selliox: ${listingData?.title || "My Business"}. Use my referral code ${userReferralCode} for a FREE first month!`;
-    const emailSubject = "Join me on Selliox - Get your first month FREE!";
-    const emailBody = `Hi there,\n\nI just created a listing on Selliox and wanted to share my referral code with you. Use code ${userReferralCode} when you sign up to get your first month FREE!\n\nCheck it out: ${shareUrl}\n\nThanks,\n${user?.name || "A friend"}`;
 
-    switch (platform) {
-      case "facebook":
-        shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
-        break;
-      case "twitter":
-        shareLink = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-        break;
-      case "linkedin":
-        shareLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}`;
-        break;
-      case "whatsapp":
-        shareLink = `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`;
-        break;
-      case "email":
-        shareLink = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-        break;
-      default:
-        return;
+    try {
+      switch (platform) {
+        case "facebook":
+          shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+          window.open(shareLink, "_blank", "width=600,height=400");
+          break;
+        case "email":
+          shareLink = `mailto:?subject=${encodeURIComponent("Join Selliox with my referral code")}&body=${encodeURIComponent(shareText + " Use code: " + userReferralCode + " " + shareUrl)}`;
+          window.location.href = shareLink;
+          break;
+        case "whatsapp":
+          shareLink = `https://wa.me/?text=${encodeURIComponent(shareText + " Use code: " + userReferralCode + " " + shareUrl)}`;
+          window.open(shareLink, "_blank");
+          break;
+        case "sms":
+          // For mobile devices
+          if (/Android|iPhone/i.test(navigator.userAgent)) {
+            shareLink = `sms:?body=${encodeURIComponent(shareText + " Use code: " + userReferralCode + " " + shareUrl)}`;
+            window.location.href = shareLink;
+          } else {
+            // Copy to clipboard and show instructions
+            navigator.clipboard.writeText(`${shareText} Use code: ${userReferralCode} ${shareUrl}`);
+            alert("Message copied to clipboard! Paste it into your messaging app to share.");
+          }
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error("Error sharing content:", error);
+      // Fallback to clipboard copy if sharing fails
+      try {
+        navigator.clipboard.writeText(`${shareText} Use code: ${userReferralCode} ${shareUrl}`);
+        alert("Message copied to clipboard! Paste it to share.");
+      } catch (clipboardError) {
+        console.error("Clipboard error:", clipboardError);
+        alert("Unable to share. Please copy this code manually: " + userReferralCode);
+      }
     }
-
-    window.open(shareLink, "_blank", "width=600,height=400");
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Success Banner */}
-      <div className={`${usingExistingSubscription ? "bg-blue-500" : "bg-green-500"} text-white p-6 rounded-lg mb-6 text-center`}>
-        <div className="flex justify-center mb-2">
-          {usingExistingSubscription ? <FaIdCard className="text-white text-2xl" /> : <FaCheck className="text-white text-2xl" />}
-        </div>
-        <h2 className="text-xl font-semibold mb-1">
-          {usingExistingSubscription ? "Listing Created Successfully!" : "Payment Successful!"}
-        </h2>
-        <p>Your listing is now live</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 py-4 px-4 sm:px-6">
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+          {/* Success Header */}
+          <div className="bg-primaryA0 text-white p-6 text-center">
+            <FaCheckCircle className="mx-auto text-5xl mb-4" />
+            <h1 className="text-2xl font-bold">{usingExistingSubscription ? "Listing Created Successfully!" : "Payment Successful!"}</h1>
+            <p className="mt-2">Your listing has been published and is now live</p>
+          </div>
 
-      {/* Confirmation Message */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 text-center">
-        <p className="text-gray-700">
-          {usingExistingSubscription
-            ? "Your new listing has been created using your existing subscription plan. Your listing is now published and visible to all users."
-            : "Thank you for your payment. Your listing has been successfully published and is now visible to all users."}
-        </p>
-      </div>
+          {/* Main Content */}
+          <div className="p-6">
+            {/* Welcome Message */}
+            <div className="text-center mb-6 sm:mb-8">
+              <h2 className="text-xl font-semibold text-gray-800">Congratulations, {user?.fullName || "User"}!</h2>
+              <p className="text-gray-600 mt-2 px-1">
+                {usingExistingSubscription
+                  ? "Your new listing has been created using your existing subscription plan."
+                  : "Thank you for your payment. Your listing is now visible to all users."}
+              </p>
+            </div>
 
-      {/* Action Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-6 text-center hover:shadow-md transition-shadow">
-          <div className="flex justify-center mb-3">
-            <div className="text-gray-700">
-              <FaListUl size={24} />
+            {/* Referral Code Section */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
+              <h3 className="text-lg font-medium text-gray-800 mb-4">Your Referral Code</h3>
+
+              <div className="flex items-center justify-between bg-white border rounded-lg p-3 mb-4">
+                <span className="font-medium text-gray-700">{userReferralCode}</span>
+                <button
+                  onClick={handleCopyReferralCode}
+                  className="text-primaryA0 hover:text-primaryA0/80 transition-colors"
+                  aria-label="Copy referral code"
+                >
+                  {copied ? <FaClipboardCheck size={20} /> : <FaClipboard size={20} />}
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-4">Share your referral code with friends and earn rewards when they sign up!</p>
+
+              {/* Share Buttons */}
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 justify-center">
+                <button
+                  onClick={() => handleShare("facebook")}
+                  className="flex items-center justify-center gap-2 bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  <FaFacebook size={16} />
+                  <span>Facebook</span>
+                </button>
+                <button
+                  onClick={() => handleShare("email")}
+                  className="flex items-center justify-center gap-2 bg-red-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm"
+                >
+                  <FaEnvelope size={16} />
+                  <span>Email</span>
+                </button>
+                <button
+                  onClick={() => handleShare("whatsapp")}
+                  className="flex items-center justify-center gap-2 bg-green-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm"
+                >
+                  <FaWhatsapp size={16} />
+                  <span>WhatsApp</span>
+                </button>
+                <button
+                  onClick={() => handleShare("sms")}
+                  className="flex items-center justify-center gap-2 bg-blue-400 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors text-sm"
+                >
+                  <FaSms size={16} />
+                  <span>Text</span>
+                </button>
+              </div>
+            </div>
+
+            {/* How It Works */}
+            <div className="mb-8">
+              <h3 className="text-lg font-medium text-gray-800 mb-4">How It Works</h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                <div className="text-center p-4 border border-gray-200 rounded-lg bg-white">
+                  <div className="bg-primaryA0/10 w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3">
+                    <FaShare className="text-primaryA0 text-xl" />
+                  </div>
+                  <h4 className="font-medium text-gray-800 mb-2">Share Your Code</h4>
+                  <p className="text-sm text-gray-600">Share your unique referral code with friends and colleagues</p>
+                </div>
+
+                <div className="text-center p-4 border border-gray-200 rounded-lg bg-white">
+                  <div className="bg-primaryA0/10 w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3">
+                    <FaTicketAlt className="text-primaryA0 text-xl" />
+                  </div>
+                  <h4 className="font-medium text-gray-800 mb-2">Earn Tickets</h4>
+                  <p className="text-sm text-gray-600">Get 1 ticket when they sign up, 5 when they create a listing</p>
+                </div>
+
+                <div className="text-center p-4 border border-gray-200 rounded-lg bg-white">
+                  <div className="bg-primaryA0/10 w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-3">
+                    <FaTrophy className="text-primaryA0 text-xl" />
+                  </div>
+                  <h4 className="font-medium text-gray-800 mb-2">Win Prizes</h4>
+                  <p className="text-sm text-gray-600">Enter monthly $1,000 prize draws with your tickets</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Next Steps */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Link
+                to="/"
+                className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 sm:px-6 py-3 rounded-lg transition-colors text-sm sm:text-base"
+              >
+                <FaHome size={16} className="flex-shrink-0" />
+                <span>Go to Homepage</span>
+              </Link>
+
+              <Link
+                to="/referral-dashboard"
+                className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 sm:px-6 py-3 rounded-lg transition-colors text-sm sm:text-base"
+              >
+                <FaShare size={16} className="flex-shrink-0" />
+                <span>Referral Dashboard</span>
+              </Link>
+
+              <Link
+                to="/mylistings"
+                className="flex items-center justify-center gap-2 bg-primaryA0 hover:bg-primaryA0/90 text-white px-3 sm:px-6 py-3 rounded-lg transition-colors text-sm sm:text-base"
+              >
+                <FaListUl size={16} className="flex-shrink-0" />
+                <span>My Listings</span>
+              </Link>
             </div>
           </div>
-          <h3 className="font-medium mb-1">View My Listings</h3>
-          <p className="text-sm text-gray-500 mb-4">Manage your active listings</p>
-          <button
-            onClick={() => navigate("/mylistings")}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-all w-full"
-          >
-            Go to My Listings
-          </button>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-lg p-6 text-center hover:shadow-md transition-shadow">
-          <div className="flex justify-center mb-3">
-            <div className="text-gray-700">
-              <FaUser size={24} />
-            </div>
-          </div>
-          <h3 className="font-medium mb-1">Dashboard</h3>
-          <p className="text-sm text-gray-500 mb-4">View your account dashboard</p>
-          <button
-            onClick={() => navigate("/account")}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-all w-full"
-          >
-            Go to Dashboard
-          </button>
-        </div>
-      </div>
-
-      {/* Referral Section */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <h3 className="font-medium mb-4 text-center">Share with others and earn rewards!</h3>
-        <p className="text-sm text-gray-600 mb-6 text-center">
-          Refer others to create listings and get a free month or draw entries for a chance to win $1,000!
-        </p>
-
-        {/* Referral Code */}
-        <div className="bg-gray-50 border rounded-lg p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="font-medium text-gray-700">{userReferralCode}</div>
-            <button
-              onClick={handleCopyReferralCode}
-              className="text-blue-600 hover:text-blue-800 transition-colors"
-              aria-label="Copy referral code"
-            >
-              {copied ? <FaClipboardCheck size={20} /> : <FaCopy size={20} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Referral Dashboard Button */}
-        <div className="text-center">
-          <button
-            onClick={() => navigate("/referral-dashboard")}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all inline-flex items-center justify-center gap-2"
-          >
-            <span>Go to Referral Dashboard</span>
-          </button>
-        </div>
-
-        {/* Social Sharing */}
-        <div className="mt-6 text-center">
-          <h4 className="font-medium mb-3">Share Your Referral Link</h4>
-          <p className="text-sm text-gray-600 mb-3">Invite friends to join Selliox using these platforms:</p>
-
-          {/* First row of sharing options */}
-          <div className="flex gap-3 mb-3">
-            <button
-              onClick={() => handleShare("facebook")}
-              className="flex-1 flex items-center justify-center gap-2 py-2 bg-[#1877F2] text-white rounded-md hover:bg-[#1877F2]/90 transition-colors"
-            >
-              <FaFacebook />
-              <span>Facebook</span>
-            </button>
-            <button
-              onClick={() => handleShare("twitter")}
-              className="flex-1 flex items-center justify-center gap-2 py-2 bg-[#1DA1F2] text-white rounded-md hover:bg-[#1DA1F2]/90 transition-colors"
-            >
-              <FaTwitter />
-              <span>Twitter</span>
-            </button>
-            <button
-              onClick={() => handleShare("linkedin")}
-              className="flex-1 flex items-center justify-center gap-2 py-2 bg-[#0A66C2] text-white rounded-md hover:bg-[#0A66C2]/90 transition-colors"
-            >
-              <FaLinkedin />
-              <span>LinkedIn</span>
-            </button>
-          </div>
-
-          {/* Second row of sharing options */}
-          <div className="flex gap-3">
-            <button
-              onClick={() => handleShare("whatsapp")}
-              className="flex-1 flex items-center justify-center gap-2 py-2 bg-[#25D366] text-white rounded-md hover:bg-[#25D366]/90 transition-colors"
-            >
-              <FaWhatsapp />
-              <span>WhatsApp</span>
-            </button>
-            <button
-              onClick={() => handleShare("email")}
-              className="flex-1 flex items-center justify-center gap-2 py-2 bg-[#EA4335] text-white rounded-md hover:bg-[#EA4335]/90 transition-colors"
-            >
-              <FaEnvelope />
-              <span>Email</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Next steps */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">What's Next?</h3>
-        <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-primaryA0 text-white rounded-full flex items-center justify-center font-medium">1</div>
-            <div>
-              <h4 className="font-medium text-gray-800">Track Your Referrals</h4>
-              <p className="text-gray-600">Visit your referral dashboard to see who has used your code and what rewards you've earned.</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-primaryA0 text-white rounded-full flex items-center justify-center font-medium">2</div>
-            <div>
-              <h4 className="font-medium text-gray-800">Respond to Inquiries</h4>
-              <p className="text-gray-600">Check your messages regularly to respond to customer inquiries quickly.</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-primaryA0 text-white rounded-full flex items-center justify-center font-medium">3</div>
-            <div>
-              <h4 className="font-medium text-gray-800">Share Your Referral Code</h4>
-              <p className="text-gray-600">Use the sharing tools above to invite friends and earn rewards.</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            onClick={() => navigate("/referral/dashboard")}
-            className="px-6 py-2 bg-primaryA0 text-white rounded-md hover:bg-primaryA0/90 transition-colors"
-          >
-            Go to Referral Dashboard
-          </button>
-          <button
-            onClick={() => navigate("/")}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            Return to Homepage
-          </button>
         </div>
       </div>
     </div>
